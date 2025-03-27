@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 70;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -151,10 +151,10 @@
 				LastUpgradeCheck = 1540;
 				TargetAttributes = {
 					680686122D67646A00452608 = {
-						CreatedOnToolsVersion = 15.4;
+						CreatedOnToolsVersion = 15.2;
 					};
 					683195E52D94D8FA007CBC95 = {
-						CreatedOnToolsVersion = 16.2;
+						CreatedOnToolsVersion = 15.2;
 						TestTargetID = 680686122D67646A00452608;
 					};
 				};
