@@ -1,4 +1,4 @@
-name: iOS Starter Workflow
+name: iOS CI
 
 on:
   push:
@@ -8,39 +8,49 @@ on:
 
 jobs:
   build:
-    name: Build and Test testecollectionview scheme using latest iPhone simulator
+    name: Build and Test
     runs-on: macos-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Select Xcode Version
+      - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
-      - name: Show Xcode Version
+      - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: Build
+      - name: Find and Build Project
         env:
-          scheme: testecollectionview
-          platform: iOS Simulator
+          SCHEME: "testecollectionview"  # Confirme se é esse o nome exato do seu scheme
         run: |
-          device=$(xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}' | sed -e "s/ Simulator$//")
-          echo "Using device: $device"
-          
-          if [ -f "*.xcworkspace" ]; then 
-            filetype_parameter="workspace"
-            file_to_build="*.xcworkspace"
-          else 
-            filetype_parameter="project"
-            file_to_build="*.xcodeproj"
+          # 1. Encontra o dispositivo
+          DEVICE=$(xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | sed 's/ Simulator//')
+          echo "📱 Usando dispositivo: $DEVICE"
+
+          # 2. Encontra o arquivo do projeto (.xcodeproj)
+          PROJECT_PATH=$(find . -name "*.xcodeproj" -maxdepth 1 -type d | head -1)
+          if [ -z "$PROJECT_PATH" ]; then
+              echo "❌ Nenhum arquivo .xcodeproj encontrado!"
+              exit 1
           fi
+          echo "🛠 Projeto encontrado em: $PROJECT_PATH"
 
-          echo "Building file: $file_to_build"
-          
-          xcodebuild build-for-testing -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=$platform,name=$device"
+          # 3. Build (ajuste o scheme se necessário)
+          xcodebuild build-for-testing \
+            -project "$PROJECT_PATH" \
+            -scheme "$SCHEME" \
+            -destination "platform=iOS Simulator,name=$DEVICE"
 
-      - name: Test
+      - name: Run Tests
         env:
-          scheme: testecollection
+          SCHEME: "testecollectionview"
+        run: |
+          DEVICE=$(xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | sed 's/ Simulator//')
+          PROJECT_PATH=$(find . -name "*.xcodeproj" -maxdepth 1 -type d | head -1)
+          
+          xcodebuild test \
+            -project "$PROJECT_PATH" \
+            -scheme "$SCHEME" \
+            -destination "platform=iOS Simulator,name=$DEVICE"
