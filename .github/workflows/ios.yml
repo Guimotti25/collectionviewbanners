@@ -2,9 +2,9 @@ name: iOS CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
@@ -18,30 +18,28 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '15.4' # Use a mesma versão que você usa localmente
+          xcode-version: '15.4'
 
-      - name: Show environment info
+      - name: List available schemes
         run: |
-          xcodebuild -version
-          xcode-select -p
+          xcodebuild -list -project testecollectionview.xcodeproj
 
-      - name: Build
+      - name: Build with explicit settings
         env:
-          SCHEME: "testecollectionview"
+          SCHEME: "testecollectionview"  # Confirme se é EXATAMENTE este nome
+          DESTINATION: "platform=iOS Simulator,name=iPhone 15"
         run: |
-          # 1. Limpa possíveis caches problemáticos
+          # 1. Limpeza completa
           rm -rf ~/Library/Developer/Xcode/DerivedData/*
           
-          # 2. Seleciona dispositivo
-          DEVICE=$(xcrun simctl list devices | grep -E 'iPhone.*?\(.*?\)' | grep -v unavailable | head -1 | awk -F '[()]' '{print $1}' | sed 's/ *$//g')
-          echo "📱 Usando dispositivo: $DEVICE"
-
-          # 3. Build com tratamento de erro robusto
+          # 2. Build com tratamento de erro
           set -o pipefail && xcodebuild \
             -project "testecollectionview.xcodeproj" \
             -scheme "$SCHEME" \
-            -destination "platform=iOS Simulator,name=$DEVICE" \
-            clean build-for-testing \
+            -destination "$DESTINATION" \
+            clean build \
+            CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
+            ONLY_ACTIVE_ARCH=YES \
             | xcpretty
