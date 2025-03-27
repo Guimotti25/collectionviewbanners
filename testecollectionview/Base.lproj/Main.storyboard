@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -16,9 +16,9 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="NCd-Vo-1cN">
-                                <rect key="frame" x="0.0" y="75" width="393" height="214"/>
-                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="NCd-Vo-1cN">
+                                <rect key="frame" x="0.0" y="83" width="393" height="214"/>
+                                <color key="backgroundColor" systemColor="underPageBackgroundColor"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="214" id="Wtz-6l-80o"/>
                                 </constraints>
@@ -31,18 +31,18 @@
                                 <cells/>
                             </collectionView>
                             <pageControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" numberOfPages="3" translatesAutoresizingMaskIntoConstraints="NO" id="mXh-Lz-VoD">
-                                <rect key="frame" x="16" y="305" width="361" height="26"/>
+                                <rect key="frame" x="16" y="313" width="361" height="26"/>
                             </pageControl>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
-                        <color key="backgroundColor" systemColor="systemGreenColor"/>
+                        <color key="backgroundColor" systemColor="underPageBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="NCd-Vo-1cN" secondAttribute="trailing" id="8qV-aH-pn0"/>
                             <constraint firstItem="mXh-Lz-VoD" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="16" id="IFm-Om-i8k"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="mXh-Lz-VoD" secondAttribute="trailing" constant="16" id="RGW-LK-ff7"/>
                             <constraint firstItem="NCd-Vo-1cN" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="X63-9e-9Eq"/>
                             <constraint firstItem="mXh-Lz-VoD" firstAttribute="top" secondItem="NCd-Vo-1cN" secondAttribute="bottom" constant="16" id="cQ4-NA-EVX"/>
-                            <constraint firstItem="NCd-Vo-1cN" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="16" id="tnv-36-cQM"/>
+                            <constraint firstItem="NCd-Vo-1cN" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="24" id="tnv-36-cQM"/>
                         </constraints>
                     </view>
                     <connections>
@@ -56,11 +56,8 @@
         </scene>
     </scenes>
     <resources>
-        <systemColor name="systemBackgroundColor">
-            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
-        <systemColor name="systemGreenColor">
-            <color red="0.20392156862745098" green="0.7803921568627451" blue="0.34901960784313724" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        <systemColor name="underPageBackgroundColor">
+            <color red="0.70980392156862748" green="0.71764705882352942" blue="0.74117647058823533" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>
