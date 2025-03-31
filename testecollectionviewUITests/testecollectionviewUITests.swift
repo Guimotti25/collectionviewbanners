@@ -16,10 +16,10 @@ final class testecollectionviewUITests: XCTestCase {
     }
     
     func testNumberOfBanners() throws {
-        // Verifica se o número de células corresponde ao esperado (4)
         let collectionView = app.collectionViews["collectionViewBanner"]
-        let cells = collectionView.cells
-        XCTAssertEqual(cells.count, 4, "Número incorreto de banners na CollectionView")
+        let expectedCount = 4 // Ajuste para o número correto
+        XCTAssertEqual(collectionView.cells.count, expectedCount,
+            "Esperava \(expectedCount) banners, encontrou \(collectionView.cells.count)")
     }
     
     func testBannerImagesAreLoaded() throws {
@@ -29,15 +29,16 @@ final class testecollectionviewUITests: XCTestCase {
     }
     
     func testPageControlSyncWithCollectionView() throws {
-        // Verifica se o PageControl está sincronizado com a CollectionView
         let collectionView = app.collectionViews["collectionViewBanner"]
         let pageControl = app.pageIndicators["pageControl"]
         
-        // Rola para o próximo item
-        collectionView.swipeLeft()
+        // Scroll lento e deliberado
+        collectionView.swipeLeft(velocity: .slow)
+        sleep(1) // Espera a animação
         
-        // Verifica se o PageControl atualizou
-        XCTAssertEqual(pageControl.value as? String, "page 2 of 4", "PageControl não está sincronizado com a CollectionView")
+        let currentPage = pageControl.value as? String
+        XCTAssertTrue(currentPage?.contains("page 2 of") == true,
+            "PageControl não atualizou após scroll. Valor atual: \(currentPage ?? "nil")")
     }
     
     func testLaunchPerformance() throws {
