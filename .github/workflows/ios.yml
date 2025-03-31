@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     runs-on: macos-14
-    timeout-minutes: 5  # Timeout mais agressivo
+    timeout-minutes: 5
     
     steps:
     - uses: actions/checkout@v4
@@ -17,20 +17,20 @@ jobs:
     - name: 🛠️ Setup Xcode
       run: |
         sudo xcode-select -switch /Applications/Xcode_16.2.app/Contents/Developer
-        # Cria um simulador dedicado
-        xcrun simctl create 'CI iPhone' 'iPhone 15' --os 17.2
-        xcrun simctl boot 'CI iPhone'
+        echo "### Xcode Version ###"
+        xcodebuild -version
         
-    - name: 🧪 Run UI Tests
+    - name: 🧪 List Available Simulators
+      run: xcrun simctl list devices
+        
+    - name: 🚀 Run UI Tests
       run: |
         set -o pipefail && xcodebuild test \
         -project "testecollectionview.xcodeproj" \
         -scheme "testecollectionview" \
         -only-testing:testecollectionviewUITests \
-        -destination 'platform=iOS Simulator,id=$(xcrun simctl list devices | grep "CI iPhone" | awk -F "[()]" '{print $2}')' \
+        -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
         CODE_SIGNING_ALLOWED=NO \
-        -parallel-testing-enabled NO \
-        -test-iterations 1 \
         -derivedDataPath ./DerivedData \
         | tee test-results.txt
         
