@@ -20,12 +20,15 @@ jobs:
         echo "### Xcode Version ###"
         xcodebuild -version
         
+    - name: 🧪 List Simulators
+      run: xcrun simctl list devices
+        
     - name: 🚀 Run UI Tests
       run: |
         set -o pipefail && xcodebuild test \
         -project "testecollectionview.xcodeproj" \
         -scheme "testecollectionview" \
-        -destination 'platform=iOS Simulator,name=iPhone 15,OS=18.2' \
+        -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' \
         CODE_SIGNING_ALLOWED=NO \
         | tee test-results.txt
         
