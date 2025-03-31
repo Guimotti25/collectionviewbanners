@@ -19,7 +19,8 @@ class CelulaBannerPrincipal: UICollectionViewCell
         super.awakeFromNib()
         //self.selectionStyle = UICollectionViewCell.SelectionStyle.none
      //   self.viewCelula.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(abrirModuloPlano)))
-        
+        // No método awakeFromNib() ou onde configurar a célula:
+        self.imageView.accessibilityIdentifier = "bannerImage"
         self.viewCelula.layer.masksToBounds = true
         self.viewCelula.layer.cornerRadius = 20
     }

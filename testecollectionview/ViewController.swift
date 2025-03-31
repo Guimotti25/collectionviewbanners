@@ -18,13 +18,16 @@ class ViewController: UIViewController {
         let celulaBanner = UINib(nibName: "CelulaBannerPrincipal", bundle: nil)
         collectionViewBanner.register(celulaBanner, forCellWithReuseIdentifier: "CelulaBannerPrincipal")
 
-        collectionViewBanner.delegate = self
-        collectionViewBanner.dataSource = self
+        self.collectionViewBanner.delegate = self
+        self.collectionViewBanner.dataSource = self
 
         self.pageControl.numberOfPages = listaImagem.count
         self.pageControl.currentPage = 0
         
-        configurarLayoutCollectionView()
+        self.collectionViewBanner.accessibilityIdentifier = "collectionViewBanner"
+        self.pageControl.accessibilityIdentifier = "pageControl"
+        
+        self.configurarLayoutCollectionView()
     }
 
     func configurarLayoutCollectionView() 
