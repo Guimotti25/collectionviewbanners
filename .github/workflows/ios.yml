@@ -20,25 +20,18 @@ jobs:
         echo "### Xcode Version ###"
         xcodebuild -version
         
-    - name: 🧪 List Available Simulators
-      run: xcrun simctl list devices
-        
     - name: 🚀 Run UI Tests
       run: |
         set -o pipefail && xcodebuild test \
         -project "testecollectionview.xcodeproj" \
         -scheme "testecollectionview" \
-        -only-testing:testecollectionviewUITests \
-        -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
+        -destination 'platform=iOS Simulator,name=iPhone 15,OS=18.2' \
         CODE_SIGNING_ALLOWED=NO \
-        -derivedDataPath ./DerivedData \
         | tee test-results.txt
         
     - name: 📊 Upload Results
-      if: always()
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: test-logs
-        path: |
-          test-results.txt
-          ./DerivedData/Logs/Test/*.xcresult
+        path: test-results.txt
