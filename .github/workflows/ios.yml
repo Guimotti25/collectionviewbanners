@@ -20,19 +20,33 @@ jobs:
         with:
           xcode-version: '15.4'
 
+      - name: Install xcpretty
+        run: gem install xcpretty
+
       - name: List available schemes
         run: |
           xcodebuild -list -project testecollectionview.xcodeproj
 
+      - name: Kill and Reset Simulators
+        run: |
+          killall Simulator || true
+          xcrun simctl shutdown all || true
+          xcrun simctl erase all
+
+      - name: Boot iPhone Simulator
+        run: |
+          xcrun simctl boot "iPhone 15"
+          sleep 10 # Aguarda o simulador iniciar corretamente
+
       - name: Build with explicit settings
         env:
-          SCHEME: "testecollectionview"  # Confirme se é EXATAMENTE este nome
+          SCHEME: "testecollectionview"
           DESTINATION: "platform=iOS Simulator,name=iPhone 15"
         run: |
           # 1. Limpeza completa
           rm -rf ~/Library/Developer/Xcode/DerivedData/*
           
-          # 2. Build com tratamento de erro
+          # 2. Build com tratamento de erro e logs bonitos
           set -o pipefail && xcodebuild \
             -project "testecollectionview.xcodeproj" \
             -scheme "$SCHEME" \
@@ -42,4 +56,16 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
             ONLY_ACTIVE_ARCH=YES \
+            | xcpretty
+
+      - name: Run Tests
+        env:
+          SCHEME: "testecollectionview"
+          DESTINATION: "platform=iOS Simulator,name=iPhone 15"
+        run: |
+          set -o pipefail && xcodebuild \
+            -project "testecollectionview.xcodeproj" \
+            -scheme "$SCHEME" \
+            -destination "$DESTINATION" \
+            test \
             | xcpretty
