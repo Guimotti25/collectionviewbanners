@@ -1,27 +1,44 @@
-name: ✅ CI CollectionView Banners
+name: iOS CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
   build-and-test:
-    runs-on: macos-14
-    timeout-minutes: 10
-
+    runs-on: macOS-14
+    timeout-minutes: 30
+    
     steps:
     - uses: actions/checkout@v4
-
-    - name: Configurar Xcode
+      
+    - name: Set up Xcode 16.2
       run: |
         sudo xcode-select -switch /Applications/Xcode_16.2.app/Contents/Developer
-        sudo xcodebuild -runFirstLaunch
-        xcrun simctl delete unavailable
-
-    - name: Build e Teste
+        xcodebuild -version
+      
+    - name: Build Project
       run: |
-        xcodebuild clean -project "testecollectionview.xcodeproj" -scheme "testecollectionview"
-        xcodebuild \
-          -project "testecollectionview.xcodeproj" \
-          -scheme "testecollectionview" \
-          -destination "platform=iOS Simulator,name=iPhone 15" \
-          CODE_SIGNING_ALLOWED=NO \
-          build test
+        xcodebuild build \
+        -project "testecollectionview.xcodeproj" \
+        -scheme "testecollectionview" \
+        -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
+        CODE_SIGNING_ALLOWED=NO | xcpretty
+      
+    - name: Run UI Tests
+      run: |
+        xcodebuild test \
+        -project "testecollectionview.xcodeproj" \
+        -scheme "testecollectionview" \
+        -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
+        CODE_SIGNING_ALLOWED=NO | xcpretty
+      
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: |
+          ~/Library/Developer/Xcode/DerivedData/**/Logs/Test/*.xcresult
