@@ -1,4 +1,4 @@
-name: 🚀 iOS CI - Banner CollectionView
+name: 🚀 iOS CI - CollectionView Banners
 
 on:
   push:
@@ -7,47 +7,38 @@ on:
     branches: [ main, master ]
 
 jobs:
-  build-and-test:
+  test:
     runs-on: macos-14
-    timeout-minutes: 20
+    timeout-minutes: 5  # Timeout mais agressivo
     
     steps:
-    - name: 🛒 Checkout Code
-      uses: actions/checkout@v4
-      
-    - name: 🛠️ Setup Xcode 16.2
+    - uses: actions/checkout@v4
+    
+    - name: 🛠️ Setup Xcode
       run: |
         sudo xcode-select -switch /Applications/Xcode_16.2.app/Contents/Developer
-        echo "### Xcode Version ###"
-        xcodebuild -version
-      
-    - name: 🔄 Adjust Deployment Target (Temporário)
-      run: |
-        # Método mais robusto usando sed
-        sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 18.2;/IPHONEOS_DEPLOYMENT_TARGET = 17.2;/g' testecollectionview.xcodeproj/project.pbxproj
-        echo "✅ Deployment target ajustado para 17.2"
-      
-    - name: 🔨 Build Project
-      run: |
-        set -o pipefail && xcodebuild build \
-        -project "testecollectionview.xcodeproj" \
-        -scheme "testecollectionview" \
-        -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
-        CODE_SIGNING_ALLOWED=NO | xcpretty -c
-      
+        # Cria um simulador dedicado
+        xcrun simctl create 'CI iPhone' 'iPhone 15' --os 17.2
+        xcrun simctl boot 'CI iPhone'
+        
     - name: 🧪 Run UI Tests
       run: |
         set -o pipefail && xcodebuild test \
         -project "testecollectionview.xcodeproj" \
         -scheme "testecollectionview" \
-        -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
-        CODE_SIGNING_ALLOWED=NO | tee test-results.txt | xcpretty -c --color
-      
-    - name: 📊 Upload Test Results
-      uses: actions/upload-artifact@v4
+        -only-testing:testecollectionviewUITests \
+        -destination 'platform=iOS Simulator,id=$(xcrun simctl list devices | grep "CI iPhone" | awk -F "[()]" '{print $2}')' \
+        CODE_SIGNING_ALLOWED=NO \
+        -parallel-testing-enabled NO \
+        -test-iterations 1 \
+        -derivedDataPath ./DerivedData \
+        | tee test-results.txt
+        
+    - name: 📊 Upload Results
       if: always()
+      uses: actions/upload-artifact@v4
       with:
-        name: test-artifacts
+        name: test-logs
         path: |
           test-results.txt
-          ~/Library/Developer/Xcode/DerivedData/**/Logs/Test/*.xcresult
+          ./DerivedData/Logs/Test/*.xcresult
