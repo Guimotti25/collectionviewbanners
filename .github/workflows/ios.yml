@@ -9,32 +9,44 @@ on:
 jobs:
   test:
     runs-on: macos-14
-    timeout-minutes: 5
+    timeout-minutes: 10
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: 🛠️ Setup Xcode
+    - name: 🛠️ Setup Xcode Environment
       run: |
         sudo xcode-select -switch /Applications/Xcode_16.2.app/Contents/Developer
-        echo "### Xcode Version ###"
-        xcodebuild -version
+        # Configura ambiente para evitar problemas de política
+        sudo xcodebuild -runFirstLaunch
         
-    - name: 🧪 List Simulators
+    - name: 🔍 List Available Simulators
       run: xcrun simctl list devices
         
-    - name: 🚀 Run UI Tests
+    - name: 🚀 Build and Test
       run: |
+        # Cria um simulador dedicado
+        SIMULATOR_ID=$(xcrun simctl create 'CI_iPhone' 'iPhone 16' '18.2')
+        xcrun simctl boot $SIMULATOR_ID
+        
+        # Executa os testes
         set -o pipefail && xcodebuild test \
         -project "testecollectionview.xcodeproj" \
         -scheme "testecollectionview" \
-        -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' \
+        -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
         CODE_SIGNING_ALLOWED=NO \
+        -parallel-testing-enabled NO \
+        -disable-concurrent-testing \
         | tee test-results.txt
         
-    - name: 📊 Upload Results
+        # Encerra o simulador
+        xcrun simctl shutdown $SIMULATOR_ID
+        
+    - name: 📊 Upload Test Results
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-logs
-        path: test-results.txt
+        name: test-artifacts
+        path: |
+          test-results.txt
+          ~/Library/Developer/Xcode/DerivedData/**/Logs/Test/*.xcresult
