@@ -1,4 +1,4 @@
-name: iOS CI
+name: 🚀 iOS CI - Banner CollectionView
 
 on:
   push:
@@ -8,29 +8,64 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: macOS-14
-    timeout-minutes: 30
+    runs-on: macOS-latest
+    timeout-minutes: 20
     
     steps:
-    - uses: actions/checkout@v4
+    - name: 🛒 Checkout Code
+      uses: actions/checkout@v4
       
-    - name: Set up Xcode 16.2
+    - name: 🛠️ Setup Xcode 16.2
       run: |
         sudo xcode-select -switch /Applications/Xcode_16.2.app/Contents/Developer
+        echo "Using Xcode version:"
         xcodebuild -version
       
-    - name: Build Project
+    - name: 🔨 Build Project
       run: |
         xcodebuild build \
         -project "testecollectionview.xcodeproj" \
         -scheme "testecollectionview" \
-        -destination 'platform=iOS Simulator,name=iPhone 15' \
+        -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
         CODE_SIGNING_ALLOWED=NO | xcpretty
       
-    - name: Run UI Tests
+    - name: 🧪 Run UI Tests
       run: |
         xcodebuild test \
         -project "testecollectionview.xcodeproj" \
         -scheme "testecollectionview" \
-        -destination 'platform=iOS Simulator,name=iPhone 15' \
-        CODE_SIGNING_ALLOWED=NO | xcpretty
+        -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
+        CODE_SIGNING_ALLOWED=NO | tee test-results.txt | xcpretty --color
+      
+    - name: 📊 Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: xcode-test-results
+        path: |
+          ~/Library/Developer/Xcode/DerivedData/**/Logs/Test/*.xcresult
+          test-results.txt
+      
+    - name: 📝 PR Feedback
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      env:
+        TEST_RESULTS: ${{ github.workspace }}/test-results.txt
+      with:
+        script: |
+          try {
+            const results = require('fs').readFileSync(process.env.TEST_RESULTS, 'utf8');
+            const summary = results.includes('FAILED') ? '❌ Testes falharam' : '✅ Todos os testes passaram';
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `### 📱 Resultado dos Testes UI\n\n` +
+                    `**Status:** ${summary}\n\n` +
+                    `**Dispositivo:** iPhone 15 (iOS 17.2)\n\n` +
+                    `[Ver relatório completo](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`
+            });
+          } catch (error) {
+            console.error('Erro ao criar comentário:', error);
+          }
