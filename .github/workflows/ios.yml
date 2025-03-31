@@ -1,20 +1,27 @@
-name: ✅ CI Confiável - CollectionView
+name: ✅ CI CollectionView Banners
 
 on: [push, pull_request]
 
 jobs:
   build-and-test:
-    runs-on: macos-latest
-    timeout-minutes: 5
+    runs-on: macos-14
+    timeout-minutes: 10
 
     steps:
     - uses: actions/checkout@v4
 
+    - name: Configurar Xcode
+      run: |
+        sudo xcode-select -switch /Applications/Xcode_16.2.app/Contents/Developer
+        sudo xcodebuild -runFirstLaunch
+        xcrun simctl delete unavailable
+
     - name: Build e Teste
       run: |
+        xcodebuild clean -project "testecollectionview.xcodeproj" -scheme "testecollectionview"
         xcodebuild \
-        -project "testecollectionview.xcodeproj" \
-        -scheme "testecollectionview" \
-        -destination "platform=iOS Simulator,name=iPhone 15" \
-        CODE_SIGNING_ALLOWED=NO \
-        build test
+          -project "testecollectionview.xcodeproj" \
+          -scheme "testecollectionview" \
+          -destination "platform=iOS Simulator,name=iPhone 15" \
+          CODE_SIGNING_ALLOWED=NO \
+          build test
