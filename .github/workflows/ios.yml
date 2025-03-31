@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: macOS-latest
+    runs-on: macos-14  # Versão específica recomendada para Xcode 16.2
     timeout-minutes: 20
     
     steps:
@@ -18,54 +18,68 @@ jobs:
     - name: 🛠️ Setup Xcode 16.2
       run: |
         sudo xcode-select -switch /Applications/Xcode_16.2.app/Contents/Developer
-        echo "Using Xcode version:"
+        echo "### Xcode Version ###"
         xcodebuild -version
+        echo "### Swift Version ###"
+        swift --version
       
     - name: 🔨 Build Project
       run: |
-        xcodebuild build \
+        set -o pipefail && xcodebuild build \
         -project "testecollectionview.xcodeproj" \
         -scheme "testecollectionview" \
         -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
-        CODE_SIGNING_ALLOWED=NO | xcpretty
+        CODE_SIGNING_ALLOWED=NO | xcpretty -c
       
     - name: 🧪 Run UI Tests
       run: |
-        xcodebuild test \
+        set -o pipefail && xcodebuild test \
         -project "testecollectionview.xcodeproj" \
         -scheme "testecollectionview" \
         -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
-        CODE_SIGNING_ALLOWED=NO | tee test-results.txt | xcpretty --color
+        CODE_SIGNING_ALLOWED=NO | tee test-results.txt | xcpretty -c --color
       
     - name: 📊 Upload Test Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4  # Versão atualizada
       if: always()
       with:
-        name: xcode-test-results
+        name: test-artifacts
         path: |
-          ~/Library/Developer/Xcode/DerivedData/**/Logs/Test/*.xcresult
           test-results.txt
+          ~/Library/Developer/Xcode/DerivedData/**/Logs/Test/*.xcresult
+        retention-days: 5
       
     - name: 📝 PR Feedback
       if: github.event_name == 'pull_request'
       uses: actions/github-script@v6
       env:
-        TEST_RESULTS: ${{ github.workspace }}/test-results.txt
+        RESULTS_FILE: ${{ github.workspace }}/test-results.txt
       with:
         script: |
+          const fs = require('fs');
+          const { SUMMARY_ENV_VAR } = require('@actions/core/lib/summary');
+          
           try {
-            const results = require('fs').readFileSync(process.env.TEST_RESULTS, 'utf8');
-            const summary = results.includes('FAILED') ? '❌ Testes falharam' : '✅ Todos os testes passaram';
+            // Criar resumo executivo
+            let summary = `### 📋 Resumo dos Testes UI\n`;
+            summary += `**Status:** ${process.env.TEST_RESULT || '⚠️ Não determinado'}\n\n`;
             
+            // Adicionar detalhes se disponíveis
+            if (fs.existsSync(process.env.RESULTS_FILE)) {
+              const results = fs.readFileSync(process.env.RESULTS_FILE, 'utf8');
+              summary += `<details>\n<summary>📜 Log de Testes</summary>\n\n\`\`\`\n${results}\n\`\`\`\n</details>`;
+            }
+            
+            // Postar comentário
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `### 📱 Resultado dos Testes UI\n\n` +
-                    `**Status:** ${summary}\n\n` +
-                    `**Dispositivo:** iPhone 15 (iOS 17.2)\n\n` +
-                    `[Ver relatório completo](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`
+              body: summary
             });
+            
+            // Definir saída para o passo seguinte
+            process.env[SUMMARY_ENV_VAR] = summary;
           } catch (error) {
-            console.error('Erro ao criar comentário:', error);
+            console.error('Erro ao processar resultados:', error);
           }
