@@ -2,7 +2,7 @@
 
 # 🖼️ Banner CollectionView App
 
-![CI Status](https://github.com/Guimotti25/testecollectionview/actions/workflows/ci.yml/badge.svg)
+![CI Status](https://github.com/Guimotti25/testecollectionview/workflows/🚀%20iOS%20CI%20-%20Banner%20CollectionView/badge.svg)
 
 Um simples aplicativo em Swift para testar o comportamento de uma `UICollectionView` com banners, alinhados na tela como um carrossel.
 
