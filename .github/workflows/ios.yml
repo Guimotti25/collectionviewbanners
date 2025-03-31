@@ -1,52 +1,38 @@
-name: 🚀 iOS CI - CollectionView Banners
+name: ✅ CI Básico para CollectionView
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
-  test:
-    runs-on: macos-14
-    timeout-minutes: 10
-    
+  build-and-test:
+    runs-on: macos-latest
+    timeout-minutes: 8
+
     steps:
     - uses: actions/checkout@v4
-    
-    - name: 🛠️ Setup Xcode Environment
+
+    - name: Configurar Xcode
       run: |
         sudo xcode-select -switch /Applications/Xcode_16.2.app/Contents/Developer
-        # Configura ambiente para evitar problemas de política
         sudo xcodebuild -runFirstLaunch
-        
-    - name: 🔍 List Available Simulators
-      run: xcrun simctl list devices
-        
-    - name: 🚀 Build and Test
+
+    - name: Build e Teste
       run: |
-        # Cria um simulador dedicado
-        SIMULATOR_ID=$(xcrun simctl create 'CI_iPhone' 'iPhone 16' '18.2')
-        xcrun simctl boot $SIMULATOR_ID
-        
-        # Executa os testes
-        set -o pipefail && xcodebuild test \
+        set -o pipefail && xcodebuild \
         -project "testecollectionview.xcodeproj" \
         -scheme "testecollectionview" \
-        -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+        -destination "platform=iOS Simulator,name=iPhone 16" \
         CODE_SIGNING_ALLOWED=NO \
-        -parallel-testing-enabled NO \
-        -disable-concurrent-testing \
-        | tee test-results.txt
-        
-        # Encerra o simulador
-        xcrun simctl shutdown $SIMULATOR_ID
-        
-    - name: 📊 Upload Test Results
+        build test | tee test-results.txt
+
+    - name: Publicar Resultados
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-artifacts
+        name: test-results
         path: |
           test-results.txt
           ~/Library/Developer/Xcode/DerivedData/**/Logs/Test/*.xcresult
