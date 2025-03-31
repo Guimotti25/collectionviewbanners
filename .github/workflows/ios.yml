@@ -20,14 +20,12 @@ jobs:
         sudo xcode-select -switch /Applications/Xcode_16.2.app/Contents/Developer
         echo "### Xcode Version ###"
         xcodebuild -version
-        echo "### Available Simulators ###"
-        xcrun simctl list devices --json
       
-    - name: 🔄 Adjust Deployment Target
+    - name: 🔄 Adjust Deployment Target (Temporário)
       run: |
-        # Ajusta temporariamente o deployment target para 17.2
-        plutil -replace MinimumOSVersion -string "17.2" testecollectionview.xcodeproj/project.pbxproj
-        echo "Adjusted deployment target to iOS 17.2 for CI"
+        # Método mais robusto usando sed
+        sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 18.2;/IPHONEOS_DEPLOYMENT_TARGET = 17.2;/g' testecollectionview.xcodeproj/project.pbxproj
+        echo "✅ Deployment target ajustado para 17.2"
       
     - name: 🔨 Build Project
       run: |
@@ -44,13 +42,6 @@ jobs:
         -scheme "testecollectionview" \
         -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
         CODE_SIGNING_ALLOWED=NO | tee test-results.txt | xcpretty -c --color
-      
-    - name: 🔙 Restore Deployment Target
-      if: always()
-      run: |
-        # Restaura o deployment target original (18.2)
-        plutil -replace MinimumOSVersion -string "18.2" testecollectionview.xcodeproj/project.pbxproj
-        echo "Restored original deployment target (iOS 18.2)"
       
     - name: 📊 Upload Test Results
       uses: actions/upload-artifact@v4
