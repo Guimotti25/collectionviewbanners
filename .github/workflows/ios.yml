@@ -2,70 +2,35 @@ name: iOS CI
 
 on:
   push:
-    branches: ["main"]
+    branches: [ main, master ]
   pull_request:
-    branches: ["main"]
+    branches: [ main, master ]
 
 jobs:
-  build:
-    name: Build and Test
-    runs-on: macos-latest
-
+  build-and-test:
+    runs-on: macOS-14
+    timeout-minutes: 30
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '15.4'
-
-      - name: Install xcpretty
-        run: gem install xcpretty
-
-      - name: List available schemes
-        run: |
-          xcodebuild -list -project testecollectionview.xcodeproj
-
-      - name: Kill and Reset Simulators
-        run: |
-          killall Simulator || true
-          xcrun simctl shutdown all || true
-          xcrun simctl erase all
-
-      - name: Boot iPhone Simulator
-        run: |
-          xcrun simctl boot "iPhone 15"
-          sleep 10 # Aguarda o simulador iniciar corretamente
-
-      - name: Build with explicit settings
-        env:
-          SCHEME: "testecollectionview"
-          DESTINATION: "platform=iOS Simulator,name=iPhone 15"
-        run: |
-          # 1. Limpeza completa
-          rm -rf ~/Library/Developer/Xcode/DerivedData/*
-          
-          # 2. Build com tratamento de erro e logs bonitos
-          set -o pipefail && xcodebuild \
-            -project "testecollectionview.xcodeproj" \
-            -scheme "$SCHEME" \
-            -destination "$DESTINATION" \
-            clean build \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            COMPILER_INDEX_STORE_ENABLE=NO \
-            ONLY_ACTIVE_ARCH=YES \
-            | xcpretty
-
-      - name: Run Tests
-        env:
-          SCHEME: "testecollectionview"
-          DESTINATION: "platform=iOS Simulator,name=iPhone 15"
-        run: |
-          set -o pipefail && xcodebuild \
-            -project "testecollectionview.xcodeproj" \
-            -scheme "$SCHEME" \
-            -destination "$DESTINATION" \
-            test \
-            | xcpretty
+    - uses: actions/checkout@v4
+      
+    - name: Set up Xcode 16.2
+      run: |
+        sudo xcode-select -switch /Applications/Xcode_16.2.app/Contents/Developer
+        xcodebuild -version
+      
+    - name: Build Project
+      run: |
+        xcodebuild build \
+        -project "testecollectionview.xcodeproj" \
+        -scheme "testecollectionview" \
+        -destination 'platform=iOS Simulator,name=iPhone 15' \
+        CODE_SIGNING_ALLOWED=NO | xcpretty
+      
+    - name: Run UI Tests
+      run: |
+        xcodebuild test \
+        -project "testecollectionview.xcodeproj" \
+        -scheme "testecollectionview" \
+        -destination 'platform=iOS Simulator,name=iPhone 15' \
+        CODE_SIGNING_ALLOWED=NO | xcpretty
