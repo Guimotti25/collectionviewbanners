@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: macos-14  # Versão específica recomendada para Xcode 16.2
+    runs-on: macos-14
     timeout-minutes: 20
     
     steps:
@@ -20,8 +20,14 @@ jobs:
         sudo xcode-select -switch /Applications/Xcode_16.2.app/Contents/Developer
         echo "### Xcode Version ###"
         xcodebuild -version
-        echo "### Swift Version ###"
-        swift --version
+        echo "### Available Simulators ###"
+        xcrun simctl list devices --json
+      
+    - name: 🔄 Adjust Deployment Target
+      run: |
+        # Ajusta temporariamente o deployment target para 17.2
+        plutil -replace MinimumOSVersion -string "17.2" testecollectionview.xcodeproj/project.pbxproj
+        echo "Adjusted deployment target to iOS 17.2 for CI"
       
     - name: 🔨 Build Project
       run: |
@@ -39,47 +45,18 @@ jobs:
         -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
         CODE_SIGNING_ALLOWED=NO | tee test-results.txt | xcpretty -c --color
       
+    - name: 🔙 Restore Deployment Target
+      if: always()
+      run: |
+        # Restaura o deployment target original (18.2)
+        plutil -replace MinimumOSVersion -string "18.2" testecollectionview.xcodeproj/project.pbxproj
+        echo "Restored original deployment target (iOS 18.2)"
+      
     - name: 📊 Upload Test Results
-      uses: actions/upload-artifact@v4  # Versão atualizada
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-artifacts
         path: |
           test-results.txt
           ~/Library/Developer/Xcode/DerivedData/**/Logs/Test/*.xcresult
-        retention-days: 5
-      
-    - name: 📝 PR Feedback
-      if: github.event_name == 'pull_request'
-      uses: actions/github-script@v6
-      env:
-        RESULTS_FILE: ${{ github.workspace }}/test-results.txt
-      with:
-        script: |
-          const fs = require('fs');
-          const { SUMMARY_ENV_VAR } = require('@actions/core/lib/summary');
-          
-          try {
-            // Criar resumo executivo
-            let summary = `### 📋 Resumo dos Testes UI\n`;
-            summary += `**Status:** ${process.env.TEST_RESULT || '⚠️ Não determinado'}\n\n`;
-            
-            // Adicionar detalhes se disponíveis
-            if (fs.existsSync(process.env.RESULTS_FILE)) {
-              const results = fs.readFileSync(process.env.RESULTS_FILE, 'utf8');
-              summary += `<details>\n<summary>📜 Log de Testes</summary>\n\n\`\`\`\n${results}\n\`\`\`\n</details>`;
-            }
-            
-            // Postar comentário
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: summary
-            });
-            
-            // Definir saída para o passo seguinte
-            process.env[SUMMARY_ENV_VAR] = summary;
-          } catch (error) {
-            console.error('Erro ao processar resultados:', error);
-          }
